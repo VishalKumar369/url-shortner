@@ -12,6 +12,12 @@ import type { Link } from "@/lib/api";
 export type ShortenState =
   | { status: "idle" }
   | { status: "success"; link: Link }
-  | { status: "error"; message: string };
+  | { status: "error"; message: string; values?: ShortenFormValues };
+
+/**
+ * What the user submitted. Echoed back on error because React resets the form after
+ * an action completes — without this, a typo in the alias would wipe the long URL too.
+ */
+export type ShortenFormValues = { url: string; custom_code: string };
 
 export const initialShortenState: ShortenState = { status: "idle" };

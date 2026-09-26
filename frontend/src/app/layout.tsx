@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,8 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "URL Shortener",
-  description: "Shorten long links and track their clicks.",
+  title: "Snip — URL Shortener",
+  description: "Turn long links into short, shareable ones and track how often they are opened.",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f8fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0d12" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

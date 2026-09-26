@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. Components only ever reference these (via the Tailwind colour
+ * names mapped in @theme below), so light/dark switching lives in one place.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-muted: #f1f3f7;
+  --foreground: #0f172a;
+  --muted: #5b6477;
+  --border: #e3e6ec;
+  --border-strong: #cfd4dd;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-foreground: #ffffff;
+  --accent-soft: #eef0ff;
+  --danger: #c2261d;
+  --danger-soft: #fdf1f0;
+  --success: #15803d;
+  --success-soft: #edf8f1;
+  --ring: rgb(79 70 229 / 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b0d12;
+    --surface: #12151c;
+    --surface-muted: #181c25;
+    --foreground: #e7e9ee;
+    --muted: #8d95a6;
+    --border: #232836;
+    --border-strong: #323949;
+    --accent: #8b93ff;
+    --accent-hover: #a3a9ff;
+    --accent-foreground: #0b0d12;
+    --accent-soft: rgb(139 147 255 / 0.12);
+    --danger: #ff8a80;
+    --danger-soft: rgb(255 138 128 / 0.1);
+    --success: #5ad48a;
+    --success-soft: rgb(90 212 138 / 0.1);
+    --ring: rgb(139 147 255 / 0.4);
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Previously hard-coded to Arial, which silently overrode the Geist font. */
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* Subtle backdrop: a faint grid that fades out below the hero. */
+.hero-backdrop {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+  opacity: 0.55;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fade-in-up 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation: none;
+  }
 }
