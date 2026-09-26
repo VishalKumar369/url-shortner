@@ -1,7 +1,7 @@
 """Pydantic v2 request/response models — the API's validation layer (Python 3.10+)."""
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
@@ -58,6 +58,20 @@ class LinkResponse(BaseModel):
     short_url: str
     created_at: datetime
     visits: int
+
+    @field_validator("created_at")
+    @classmethod
+    def ensure_utc(cls, value: datetime) -> datetime:
+        """Always emit an explicit UTC offset.
+
+        SQLite has no timezone type, so rows come back naive even though they were written
+        as UTC (both the Python default and SQLite's CURRENT_TIMESTAMP are UTC). Without an
+        offset, clients would parse the value as their own local time. Aware values (e.g.
+        from PostgreSQL) are normalised to UTC so every response looks the same.
+        """
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
 
 
 class ErrorResponse(BaseModel):

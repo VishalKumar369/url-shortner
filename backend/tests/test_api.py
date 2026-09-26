@@ -44,6 +44,17 @@ def test_shorten_returns_a_code_and_short_url(client):
     assert body["visits"] == 0
 
 
+def test_created_at_is_serialised_as_utc(client):
+    # Timestamps must carry an explicit UTC offset on both create and lookup, or clients
+    # would read them as local time.
+    created = client.post("/api/shorten", json={"url": "https://example.com"}).json()
+    looked_up = client.get(f"/api/links/{created['code']}").json()
+
+    for body in (created, looked_up):
+        assert body["created_at"].endswith("Z")
+    assert created["created_at"] == looked_up["created_at"]
+
+
 def test_custom_code_is_used_and_cannot_be_reused(client):
     first = client.post("/api/shorten", json={"url": "https://example.com", "custom_code": "my-link"})
     assert first.status_code == 201
