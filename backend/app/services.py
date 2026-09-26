@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.models import Link
+from app.schemas import RESERVED_CODES
 
 # base62 alphabet — safe in a URL path and free of the punctuation that needs escaping.
 ALPHABET = string.ascii_letters + string.digits
@@ -83,6 +84,11 @@ def create_link(db: Session, target_url: str, settings: Settings, custom_code: s
     last_error: IntegrityError | None = None
     for _ in range(settings.code_max_attempts):
         code = generate_code(settings.code_length)
+        if code.lower() in RESERVED_CODES:
+            # Custom codes are screened by the schema, random ones are not. With a short
+            # CODE_LENGTH a draw like "docs" would be shadowed by the real route. Treat it
+            # like a collision; with the 62-char alphabet this is vanishingly rare.
+            continue
         try:
             return _insert_link(db, code=code, target_url=target_url, on_conflict_raises=False)
         except IntegrityError as exc:

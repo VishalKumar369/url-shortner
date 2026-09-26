@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app import services
 from app.database import Base, get_db
 from app.main import app
 
@@ -53,6 +54,17 @@ def test_created_at_is_serialised_as_utc(client):
     for body in (created, looked_up):
         assert body["created_at"].endswith("Z")
     assert created["created_at"] == looked_up["created_at"]
+
+
+def test_random_codes_never_use_reserved_words(client, monkeypatch):
+    # Force the generator's first draws to be reserved (in any case); the service must
+    # skip them rather than hand out a code shadowed by a real route.
+    draws = iter(["docs", "Health", "abc1234"])
+    monkeypatch.setattr(services, "generate_code", lambda _length: next(draws))
+
+    response = client.post("/api/shorten", json={"url": "https://example.com"})
+    assert response.status_code == 201
+    assert response.json()["code"] == "abc1234"
 
 
 def test_custom_code_is_used_and_cannot_be_reused(client):
