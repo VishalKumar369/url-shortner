@@ -66,6 +66,20 @@ def test_custom_code_is_used_and_cannot_be_reused(client):
     assert duplicate.status_code == 409
 
 
+def test_url_length_limit_applies_to_the_stored_form(client):
+    base = "https://example.com/"
+    at_limit = base + "a" * (2048 - len(base))
+    assert client.post("/api/shorten", json={"url": at_limit}).status_code == 201
+
+    # One character over the column size.
+    assert client.post("/api/shorten", json={"url": at_limit + "a"}).status_code == 422
+
+    # Only ~720 characters as typed, but ~4,200 once "é" is percent-encoded for storage.
+    expands = client.post("/api/shorten", json={"url": base + "é" * 700})
+    assert expands.status_code == 422
+    assert "2048" in expands.json()["detail"][0]["msg"]
+
+
 @pytest.mark.parametrize(
     "target",
     [

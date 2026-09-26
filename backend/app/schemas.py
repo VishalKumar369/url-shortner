@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
+from app.models import MAX_TARGET_URL_LENGTH
+
 # A custom code must be URL-safe and unambiguous: letters, digits, hyphen, underscore.
 CUSTOM_CODE_PATTERN = re.compile(r"^[A-Za-z0-9_-]{3,32}$")
 
@@ -29,6 +31,19 @@ class ShortenRequest(BaseModel):
         """Defence in depth: reject any scheme other than http/https."""
         if value.scheme not in ("http", "https"):
             raise ValueError("URL must use the http or https scheme")
+        return value
+
+    @field_validator("url")
+    @classmethod
+    def fits_in_storage(cls, value: HttpUrl) -> HttpUrl:
+        """Reject URLs longer than the target_url column.
+
+        Checked on the normalised form because that is what gets stored, and normalising can
+        grow a URL (non-ASCII is percent-encoded: "é" -> "%C3%A9"). SQLite ignores VARCHAR
+        limits, but PostgreSQL would raise and the client would get a 500 instead of a 422.
+        """
+        if len(str(value)) > MAX_TARGET_URL_LENGTH:
+            raise ValueError(f"URL must be at most {MAX_TARGET_URL_LENGTH} characters")
         return value
 
     @field_validator("custom_code")

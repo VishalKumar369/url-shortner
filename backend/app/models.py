@@ -7,6 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
+# Longest target URL we store: the practical browser URL ceiling. Shared with the request
+# schema so validation and the column size can never drift apart.
+MAX_TARGET_URL_LENGTH = 2048
+
 
 def _utcnow() -> datetime:
     """Timezone-aware UTC timestamp; used as the Python-side default for created_at."""
@@ -24,8 +28,8 @@ class Link(Base):
     # every redirect is a lookup on this column.
     code: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
 
-    # The destination. 2048 chars is the practical browser URL ceiling.
-    target_url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    # The destination, as normalised by the request schema.
+    target_url: Mapped[str] = mapped_column(String(MAX_TARGET_URL_LENGTH), nullable=False)
 
     # server_default keeps rows correct even if something inserts outside the ORM.
     created_at: Mapped[datetime] = mapped_column(
