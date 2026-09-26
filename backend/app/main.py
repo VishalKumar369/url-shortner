@@ -76,6 +76,10 @@ def shorten(payload: ShortenRequest, db: DbSession, config: AppSettings) -> Link
             settings=config,
             custom_code=payload.custom_code,
         )
+    except services.SelfReferenceError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
     except services.CodeAlreadyExistsError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except services.CodeGenerationError as exc:

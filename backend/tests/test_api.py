@@ -56,6 +56,28 @@ def test_custom_code_is_used_and_cannot_be_reused(client):
 
 
 @pytest.mark.parametrize(
+    "target",
+    [
+        "http://localhost:8000/abc1234",  # exact BASE_URL origin
+        "http://LOCALHOST:8000/abc1234",  # host comparison is case-insensitive
+        "https://localhost:8000/loop",  # scheme is ignored
+    ],
+)
+def test_links_to_the_shortener_itself_are_rejected(client, target):
+    # With the default BASE_URL (http://localhost:8000) these would redirect back into
+    # the shortener; a custom code pointing at itself would loop forever.
+    response = client.post("/api/shorten", json={"url": target, "custom_code": "loop"})
+    assert response.status_code == 422
+    assert "shortener" in response.json()["detail"]
+
+
+def test_same_host_on_another_port_is_allowed(client):
+    # Only the shortener's own origin is blocked, not every service on that host.
+    response = client.post("/api/shorten", json={"url": "http://localhost:3000/page"})
+    assert response.status_code == 201
+
+
+@pytest.mark.parametrize(
     "payload",
     [
         {"url": "not-a-url"},
